@@ -73,5 +73,6 @@ Table of Contents
 
    getting-started
    measures
+   custom
    providers
    api

@@ -1,6 +1,7 @@
 import ir_measures
 from ir_measures import providers, measures, Metric
-
+import pandas as pd
+from typing import Callable, Sequence, Tuple, Union
 
 class RuntimeProvider(providers.Provider):
     """
@@ -35,7 +36,15 @@ class RuntimeEvaluator(providers.Evaluator):
             yield from measure.runtime_impl(self.qrels, run)
 
 
-def define(impl, name=None, support_cutoff=True):
+def define(
+        impl : Callable[[pd.DataFrame, pd.DataFrame], Sequence[Tuple[str,Union[float,int]]]], 
+        name : str = None, 
+        support_cutoff : bool = True):
+    """
+    Provides an API to create an evaluation measure, by passing a function that implements the measure. 
+    The function is called once, and provided with all results and the qrels. It is assumed to return a sequence of 
+    ``(qid, score)`` tuples.
+    """
     _SUPPORTED_PARAMS = {}
     if support_cutoff:
         _SUPPORTED_PARAMS['cutoff'] = measures.ParamInfo(dtype=int, required=False, desc='ranking cutoff threshold')
@@ -64,7 +73,15 @@ def _byquery_impl(impl):
     return _wrapped
 
 
-def define_byquery(impl, name=None, support_cutoff=True):
+def define_byquery(
+        impl : Callable[[pd.DataFrame, pd.DataFrame], Union[float,int]], 
+        name : str = None, 
+        support_cutoff : str = True):
+    """
+    Provides an API to create an evaluation measure, by passing a function that implements the measure. 
+    The function is called once *for each query*, and provided with all results and qrels for that query. 
+    It is assumed to return a score. This is typically easier to implement.
+    """
     return define(_byquery_impl(impl), name or repr(impl), support_cutoff)
 
 
